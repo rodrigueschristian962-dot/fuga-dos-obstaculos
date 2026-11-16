@@ -56,8 +56,8 @@ class Meteor:
             self.radius * 2
         )
 
-    def update(self):
-        self.y += self.speed
+    def update(self, extra_speed=0):
+        self.y += self.speed + extra_speed
         self.angle += self.rotation_speed
 
         self.rect.center = (int(self.x), int(self.y))
@@ -99,8 +99,10 @@ class Meteor:
         pygame.draw.circle(
             screen,
             VERMELHO,
-            (int(self.x - self.radius * 0.25),
-             int(self.y - self.radius * 0.15)),
+            (
+                int(self.x - self.radius * 0.25),
+                int(self.y - self.radius * 0.15)
+            ),
             max(3, self.radius // 5)
         )
 
