@@ -3,318 +3,560 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Fuga dos Obstáculos</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fuga dos Obstáculos | Space Arcade</title>
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Inter:wght@400;600;700;800&display=swap');
+
+:root {
+  --cyan: #43eaff;
+  --blue: #137bff;
+  --purple: #a855f7;
+  --gold: #ffd166;
+  --bg: #050817;
+}
 * { box-sizing: border-box; }
 body {
   margin: 0;
-  padding: 15px;
-  background: #101827;
+  min-height: 100vh;
+  padding: 24px 12px 40px;
   color: white;
-  font-family: Arial, sans-serif;
+  font-family: Inter, Arial, sans-serif;
   text-align: center;
+  background:
+    radial-gradient(ellipse at 50% 0%, #172a56 0%, transparent 55%),
+    radial-gradient(ellipse at 10% 80%, #241044 0%, transparent 40%),
+    var(--bg);
 }
-h1 { color: #45e6ff; }
-p { color: #cbd5e1; }
+header { margin-bottom: 20px; }
+.logo {
+  font-family: Orbitron, sans-serif;
+  font-size: clamp(25px, 6vw, 43px);
+  font-weight: 900;
+  letter-spacing: 2px;
+  margin: 5px;
+  color: var(--cyan);
+  text-shadow: 0 0 12px #43eaff, 0 0 35px #137bff;
+}
+.subtitle {
+  color: #9aabc9;
+  font-size: 13px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+}
+.game-shell {
+  width: min(100%, 520px);
+  margin: auto;
+  padding: 13px;
+  border: 1px solid #43eaff66;
+  border-radius: 23px;
+  background: linear-gradient(145deg,#182747dd,#080e20ee);
+  box-shadow: 0 0 35px #137bff22, inset 0 0 25px #43eaff0b;
+}
+.stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.stat {
+  padding: 12px;
+  border-radius: 13px;
+  background: #0a142b;
+  border: 1px solid #30476d;
+}
+.stat small {
+  display: block;
+  color: #93a8c9;
+  font-size: 10px;
+  letter-spacing: 2px;
+}
+.stat strong {
+  display: block;
+  margin-top: 5px;
+  font-family: Orbitron, sans-serif;
+  color: var(--cyan);
+  font-size: 22px;
+}
 canvas {
   display: block;
-  margin: auto;
-  background: #17243a;
-  border: 3px solid #45e6ff;
-  border-radius: 12px;
-  width: min(94vw, 480px);
+  width: 100%;
   height: auto;
+  border-radius: 14px;
+  border: 1px solid #43eaff66;
+  background: #070e20;
   touch-action: none;
 }
+.actions {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 14px;
+}
 button {
-  background: #13b9d5;
-  border: 0;
-  border-radius: 10px;
+  border: 1px solid #43eaff88;
+  background: linear-gradient(135deg,#137bff,#713bdf);
+  color: white;
   padding: 13px 22px;
-  margin: 6px;
-  color: #071522;
-  font-size: 17px;
-  font-weight: bold;
+  border-radius: 12px;
+  font-family: Inter, sans-serif;
+  font-weight: 800;
+  font-size: 14px;
   cursor: pointer;
+  box-shadow: 0 0 18px #137bff44;
+  transition: .2s;
   touch-action: none;
+}
+button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 25px #43eaff77;
+}
+.move {
+  background: #101e3b;
+  border: 1px solid #43eaff55;
+  min-width: 115px;
+}
+.help {
+  color: #8295b8;
+  font-size: 12px;
+  margin-top: 17px;
+  line-height: 1.7;
+}
+footer {
+  margin-top: 25px;
+  color: #526381;
+  font-size: 11px;
+  letter-spacing: 2px;
 }
 </style>
 </head>
 <body>
 
-<h1>🚀 Fuga dos Obstáculos</h1>
-<p>Desvie dos blocos vermelhos e pegue as moedas!</p>
+<header>
+  <div class="logo">🚀 SPACE ESCAPE</div>
+  <div class="subtitle">Fuga dos obstáculos • Arcade espacial</div>
+</header>
 
-<p>
-Pontuação: <strong id="score">0</strong> |
-Recorde: <strong id="best">0</strong>
-</p>
+<main class="game-shell">
+  <div class="stats">
+    <div class="stat">
+      <small>PONTUAÇÃO</small>
+      <strong id="score">0000</strong>
+    </div>
+    <div class="stat">
+      <small>RECORDE</small>
+      <strong id="best">0000</strong>
+    </div>
+  </div>
 
-<canvas id="game" width="480" height="600"></canvas>
+  <canvas id="game" width="480" height="600"></canvas>
 
-<div>
-  <button onclick="startGame()">▶ Jogar / Reiniciar</button>
-</div>
+  <div class="actions">
+    <button id="start">▶ INICIAR MISSÃO</button>
+  </div>
 
-<div>
-  <button id="left">⬅ Esquerda</button>
-  <button id="right">Direita ➡</button>
-</div>
+  <div class="actions">
+    <button class="move" id="left">◀ ESQUERDA</button>
+    <button class="move" id="right">DIREITA ▶</button>
+  </div>
 
-<p>Use as setas do teclado ou os botões na tela.</p>
+  <div class="help">
+    DESVIE DOS METEOROS 🔴 E COLETE AS MOEDAS 🪙<br>
+    Use ← → ou A / D no computador.
+  </div>
+</main>
+
+<footer>SPACE ESCAPE • MISSÃO DE SOBREVIVÊNCIA</footer>
 
 <script>
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
+const scoreEl = document.getElementById("score");
+const bestEl = document.getElementById("best");
+const startBtn = document.getElementById("start");
 
-const scoreText = document.getElementById("score");
-const bestText = document.getElementById("best");
+const W = 480, H = 600;
 
-let player;
-let obstacles = [];
-let coins = [];
+let player, obstacles, coins, stars;
 let score = 0;
+let best = Number(localStorage.getItem("spaceEscapeBest") || 0);
 let frame = 0;
 let running = false;
-let gameOver = false;
-let left = false;
-let right = false;
+let state = "menu";
+let left = false, right = false;
 let animationId = null;
 
-let best = Number(localStorage.getItem("fugaRecorde") || 0);
-bestText.textContent = best;
+bestEl.textContent = String(best).padStart(4,"0");
 
-// Iniciar ou reiniciar o jogo
+function createStars() {
+  stars = Array.from({length:90}, () => ({
+    x: Math.random()*W,
+    y: Math.random()*H,
+    size: Math.random()*2+0.5,
+    speed: Math.random()*1.7+0.3,
+    alpha: Math.random()*0.7+0.2
+  }));
+}
+
+function drawStars() {
+  for (const s of stars) {
+    s.y += s.speed;
+    if (s.y > H) {
+      s.y = 0;
+      s.x = Math.random()*W;
+    }
+    ctx.globalAlpha = s.alpha;
+    ctx.fillStyle = "#d9f5ff";
+    ctx.fillRect(s.x,s.y,s.size,s.size);
+  }
+  ctx.globalAlpha = 1;
+}
+
+function drawRocket() {
+  const cx = player.x + player.w/2;
+  const cy = player.y + player.h/2;
+
+  // Brilho
+  ctx.save();
+  ctx.shadowColor = "#43eaff";
+  ctx.shadowBlur = 24;
+
+  // Fogo
+  ctx.fillStyle = frame%8<4 ? "#ff9f43" : "#ffe66d";
+  ctx.beginPath();
+  ctx.moveTo(cx-8,cy+13);
+  ctx.lineTo(cx,cy+35+Math.random()*7);
+  ctx.lineTo(cx+8,cy+13);
+  ctx.fill();
+
+  // Corpo
+  const gradient = ctx.createLinearGradient(cx-15,cy-22,cx+15,cy+20);
+  gradient.addColorStop(0,"#ffffff");
+  gradient.addColorStop(.45,"#45eaff");
+  gradient.addColorStop(1,"#1872dd");
+
+  ctx.fillStyle = gradient;
+  ctx.beginPath();
+  ctx.moveTo(cx,cy-25);
+  ctx.quadraticCurveTo(cx+19,cy-5,cx+12,cy+16);
+  ctx.lineTo(cx-12,cy+16);
+  ctx.quadraticCurveTo(cx-19,cy-5,cx,cy-25);
+  ctx.fill();
+
+  // Janela
+  ctx.fillStyle = "#142c55";
+  ctx.beginPath();
+  ctx.arc(cx,cy-5,7,0,Math.PI*2);
+  ctx.fill();
+
+  ctx.strokeStyle = "#ffffff";
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // Asas
+  ctx.fillStyle = "#a855f7";
+  ctx.beginPath();
+  ctx.moveTo(cx-10,cy+8);
+  ctx.lineTo(cx-23,cy+21);
+  ctx.lineTo(cx-10,cy+17);
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.moveTo(cx+10,cy+8);
+  ctx.lineTo(cx+23,cy+21);
+  ctx.lineTo(cx+10,cy+17);
+  ctx.fill();
+
+  ctx.restore();
+}
+
+function drawMeteor(o) {
+  ctx.save();
+  ctx.translate(o.x+o.r,o.y+o.r);
+  ctx.rotate(o.rotation);
+
+  ctx.shadowColor = "#ff4757";
+  ctx.shadowBlur = 16;
+
+  const g = ctx.createRadialGradient(-5,-7,2,0,0,o.r);
+  g.addColorStop(0,"#ffb09a");
+  g.addColorStop(.5,"#ef634c");
+  g.addColorStop(1,"#741f36");
+
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  ctx.arc(0,0,o.r,0,Math.PI*2);
+  ctx.fill();
+
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = "#702a36";
+  ctx.beginPath();
+  ctx.arc(-6,-4,4,0,Math.PI*2);
+  ctx.arc(7,6,5,0,Math.PI*2);
+  ctx.fill();
+
+  ctx.restore();
+}
+
+function drawCoin(c) {
+  ctx.save();
+  ctx.translate(c.x+c.r,c.y+c.r);
+  ctx.rotate(Math.sin(frame*.07)*.2);
+  ctx.shadowColor = "#ffd166";
+  ctx.shadowBlur = 20;
+
+  const g = ctx.createRadialGradient(-4,-4,1,0,0,c.r);
+  g.addColorStop(0,"#fff3ae");
+  g.addColorStop(.6,"#ffd166");
+  g.addColorStop(1,"#b87913");
+
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  ctx.arc(0,0,c.r,0,Math.PI*2);
+  ctx.fill();
+
+  ctx.strokeStyle = "#fff3ae";
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = "#98600e";
+  ctx.font = "bold 15px Arial";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.fillText("$",0,1);
+  ctx.restore();
+}
+
+function hit(a,b) {
+  return a.x < b.x+b.w &&
+    a.x+a.w > b.x &&
+    a.y < b.y+b.h &&
+    a.y+a.h > b.y;
+}
+
 function startGame() {
   if (animationId !== null) {
     cancelAnimationFrame(animationId);
     animationId = null;
   }
 
-  player = {
-    x: 220,
-    y: 520,
-    w: 40,
-    h: 40,
-    speed: 6
-  };
-
+  player = {x:220,y:510,w:40,h:45,speed:6};
   obstacles = [];
   coins = [];
   score = 0;
   frame = 0;
   left = false;
   right = false;
+  state = "playing";
   running = true;
-  gameOver = false;
+  startBtn.textContent = "↻ REINICIAR MISSÃO";
+  scoreEl.textContent = "0000";
 
-  scoreText.textContent = score;
+  createStars();
   animationId = requestAnimationFrame(loop);
 }
 
-// Controles para celular
-function buttonControl(id, direction) {
-  const btn = document.getElementById(id);
-
-  btn.addEventListener("pointerdown", event => {
-    event.preventDefault();
-    btn.setPointerCapture(event.pointerId);
-
-    if (direction === "left") left = true;
-    else right = true;
-  });
-
-  function release() {
-    if (direction === "left") left = false;
-    else right = false;
-  }
-
-  btn.addEventListener("pointerup", release);
-  btn.addEventListener("pointercancel", release);
-  btn.addEventListener("lostpointercapture", release);
-}
-
-buttonControl("left", "left");
-buttonControl("right", "right");
-
-// Controles para computador
-document.addEventListener("keydown", event => {
-  if (["ArrowLeft", "ArrowRight"].includes(event.key)) {
-    event.preventDefault();
-  }
-
-  if (event.key === "ArrowLeft" || event.key.toLowerCase() === "a") {
-    left = true;
-  }
-
-  if (event.key === "ArrowRight" || event.key.toLowerCase() === "d") {
-    right = true;
-  }
-});
-
-document.addEventListener("keyup", event => {
-  if (event.key === "ArrowLeft" || event.key.toLowerCase() === "a") {
-    left = false;
-  }
-
-  if (event.key === "ArrowRight" || event.key.toLowerCase() === "d") {
-    right = false;
-  }
-});
-
-window.addEventListener("blur", () => {
-  left = false;
-  right = false;
-});
-
-// Verificar colisões
-function hit(a, b) {
-  return (
-    a.x < b.x + b.w &&
-    a.x + a.w > b.x &&
-    a.y < b.y + b.h &&
-    a.y + a.h > b.y
-  );
-}
-
-// Atualizar e desenhar o jogo
-function loop() {
-  if (!running) return;
-
-  animationId = null;
+function update() {
   frame++;
 
-  ctx.clearRect(0, 0, 480, 600);
-
-  // Fundo
-  ctx.fillStyle = "#17243a";
-  ctx.fillRect(0, 0, 480, 600);
-
-  ctx.fillStyle = "#263852";
-
-  for (let y = (frame * 4) % 60; y < 600; y += 60) {
-    ctx.fillRect(0, y, 480, 2);
-  }
-
-  // Movimentação do jogador
   if (left) player.x -= player.speed;
   if (right) player.x += player.speed;
+  player.x = Math.max(0,Math.min(W-player.w,player.x));
 
-  player.x = Math.max(0, Math.min(440, player.x));
+  const difficulty = Math.min(score/150,6);
 
-  // Desenhar jogador
-  ctx.fillStyle = "#45e6ff";
-  ctx.fillRect(player.x, player.y, player.w, player.h);
-
-  ctx.font = "27px Arial";
-  ctx.fillText("🚀", player.x + 5, player.y + 31);
-
-  // Criar obstáculos
-  if (frame % 55 === 0) {
+  if (frame%48===0) {
+    const r = 17+Math.random()*9;
     obstacles.push({
-      x: Math.random() * 420,
-      y: -40,
-      w: 42,
-      h: 42,
-      speed: 3 + Math.min(score / 100, 5)
+      x:Math.random()*(W-r*2),
+      y:-r*2,
+      r,
+      w:r*2,
+      h:r*2,
+      speed:3+difficulty,
+      rotation:Math.random()*6
     });
   }
 
-  // Criar moedas
-  if (frame % 100 === 0) {
+  if (frame%95===0) {
     coins.push({
-      x: 15 + Math.random() * 430,
-      y: -30,
-      w: 25,
-      h: 25
+      x:20+Math.random()*(W-55),
+      y:-30,
+      r:13,
+      w:26,
+      h:26,
+      speed:3.3
     });
   }
 
-  // Atualizar obstáculos
-  for (const obstacle of obstacles) {
-    obstacle.y += obstacle.speed;
+  for (const o of obstacles) {
+    o.y += o.speed;
+    o.rotation += .02;
 
-    ctx.fillStyle = "#ff4757";
-    ctx.fillRect(
-      obstacle.x,
-      obstacle.y,
-      obstacle.w,
-      obstacle.h
-    );
-
-    if (hit(player, obstacle)) {
+    if (hit(player,{x:o.x,y:o.y,w:o.w,h:o.h})) {
       endGame();
       return;
     }
   }
 
-  // Atualizar moedas
-  for (const coin of coins) {
-    coin.y += 3;
-
-    ctx.font = "25px Arial";
-    ctx.fillText("🪙", coin.x, coin.y + 22);
-
-    if (!coin.taken && hit(player, coin)) {
-      coin.taken = true;
+  for (const c of coins) {
+    c.y += c.speed;
+    if (!c.taken && hit(player,c)) {
+      c.taken = true;
       score += 10;
     }
   }
 
-  obstacles = obstacles.filter(o => o.y < 620);
-  coins = coins.filter(c => c.y < 620 && !c.taken);
+  obstacles = obstacles.filter(o=>o.y<H+60);
+  coins = coins.filter(c=>c.y<H+30&&!c.taken);
 
-  // Pontuação por sobrevivência
-  if (frame % 10 === 0) {
-    score++;
+  if (frame%10===0) score++;
+
+  if (score>best) {
+    best=score;
+    localStorage.setItem("spaceEscapeBest",best);
+    bestEl.textContent=String(best).padStart(4,"0");
   }
 
-  scoreText.textContent = score;
+  scoreEl.textContent=String(score).padStart(4,"0");
+}
 
-  // Atualizar recorde
-  if (score > best) {
-    best = score;
-    bestText.textContent = best;
-    localStorage.setItem("fugaRecorde", best);
-  }
+function draw() {
+  ctx.clearRect(0,0,W,H);
 
-  if (running) {
-    animationId = requestAnimationFrame(loop);
+  const bg = ctx.createLinearGradient(0,0,0,H);
+  bg.addColorStop(0,"#101d40");
+  bg.addColorStop(1,"#050817");
+  ctx.fillStyle=bg;
+  ctx.fillRect(0,0,W,H);
+
+  drawStars();
+
+  // Nebulosas
+  const glow=ctx.createRadialGradient(240,280,10,240,280,240);
+  glow.addColorStop(0,"#253d7420");
+  glow.addColorStop(1,"#05081700");
+  ctx.fillStyle=glow;
+  ctx.fillRect(0,0,W,H);
+
+  if (state==="playing") {
+    for (const o of obstacles) drawMeteor(o);
+    for (const c of coins) drawCoin(c);
+    drawRocket();
+  } else {
+    drawRocket();
+    ctx.fillStyle="#ffffff";
+    ctx.textAlign="center";
+
+    if (state==="menu") {
+      ctx.font="bold 28px Orbitron, Arial";
+      ctx.shadowColor="#43eaff";
+      ctx.shadowBlur=18;
+      ctx.fillText("SPACE ESCAPE",240,190);
+      ctx.shadowBlur=0;
+
+      ctx.font="16px Inter, Arial";
+      ctx.fillStyle="#b6c8e8";
+      ctx.fillText("Prepare-se para a missão!",240,225);
+      ctx.fillText("Desvie dos meteoros e colete moedas.",240,255);
+      ctx.font="14px Inter, Arial";
+      ctx.fillStyle="#43eaff";
+      ctx.fillText("APERTE INICIAR PARA JOGAR",240,320);
+    }
   }
 }
 
-// Finalizar partida
+function loop() {
+  animationId=null;
+  if (!running) return;
+
+  update();
+
+  if (!running) return;
+
+  draw();
+  animationId=requestAnimationFrame(loop);
+}
+
 function endGame() {
-  if (gameOver) return;
+  if (!running) return;
 
-  running = false;
-  gameOver = true;
+  running=false;
+  state="over";
+  left=false;
+  right=false;
 
-  left = false;
-  right = false;
+  draw();
 
-  ctx.fillStyle = "rgba(0,0,0,0.82)";
-  ctx.fillRect(0, 0, 480, 600);
+  ctx.fillStyle="rgba(3,7,20,.84)";
+  ctx.fillRect(0,0,W,H);
 
-  ctx.fillStyle = "white";
-  ctx.textAlign = "center";
+  ctx.textAlign="center";
+  ctx.shadowColor="#ff4757";
+  ctx.shadowBlur=20;
+  ctx.fillStyle="#ff6574";
+  ctx.font="bold 32px Orbitron, Arial";
+  ctx.fillText("MISSÃO ENCERRADA",240,255);
 
-  ctx.font = "bold 38px Arial";
-  ctx.fillText("FIM DE JOGO!", 240, 270);
+  ctx.shadowBlur=0;
+  ctx.fillStyle="#ffffff";
+  ctx.font="bold 22px Inter, Arial";
+  ctx.fillText("Pontuação: "+score,240,305);
 
-  ctx.font = "24px Arial";
-  ctx.fillText("Pontuação: " + score, 240, 320);
+  ctx.fillStyle="#ffd166";
+  ctx.font="16px Inter, Arial";
+  ctx.fillText("Recorde: "+best,240,340);
 
-  ctx.font = "17px Arial";
-  ctx.fillText("Clique em Jogar para tentar novamente", 240, 365);
-
-  ctx.textAlign = "left";
+  ctx.fillStyle="#b6c8e8";
+  ctx.font="14px Inter, Arial";
+  ctx.fillText("Clique em reiniciar para tentar novamente",240,390);
 }
 
-// Começar automaticamente
-startGame();
-</script>
+function controlButton(id,direction) {
+  const btn=document.getElementById(id);
 
+  btn.addEventListener("pointerdown",e=>{
+    e.preventDefault();
+    btn.setPointerCapture(e.pointerId);
+    if(direction==="left") left=true;
+    else right=true;
+  });
+
+  function release() {
+    if(direction==="left") left=false;
+    else right=false;
+  }
+
+  btn.addEventListener("pointerup",release);
+  btn.addEventListener("pointercancel",release);
+  btn.addEventListener("lostpointercapture",release);
+}
+
+controlButton("left","left");
+controlButton("right","right");
+
+document.addEventListener("keydown",e=>{
+  if(["ArrowLeft","ArrowRight"].includes(e.key)) e.preventDefault();
+  if(e.key==="ArrowLeft"||e.key.toLowerCase()==="a") left=true;
+  if(e.key==="ArrowRight"||e.key.toLowerCase()==="d") right=true;
+});
+
+document.addEventListener("keyup",e=>{
+  if(e.key==="ArrowLeft"||e.key.toLowerCase()==="a") left=false;
+  if(e.key==="ArrowRight"||e.key.toLowerCase()==="d") right=false;
+});
+
+window.addEventListener("blur",()=>{
+  left=false;
+  right=false;
+});
+
+startBtn.addEventListener("click",startGame);
+
+createStars();
+draw();
+</script>
 </body>
 </html>
