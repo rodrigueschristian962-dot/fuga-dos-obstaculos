@@ -1,0 +1,33 @@
+
+# Configurações gerais do jogo
+
+LARGURA = 480
+ALTURA = 650
+FPS = 60
+
+TITULO = "Fuga dos Obstáculos"
+
+# Cores (R, G, B)
+PRETO = (10, 10, 20)
+BRANCO = (255, 255, 255)
+AZUL = (40, 150, 255)
+AZUL_ESCURO = (15, 25, 55)
+VERMELHO = (230, 65, 65)
+LARANJA = (255, 145, 40)
+AMARELO = (255, 220, 70)
+CINZA = (120, 120, 135)
+VERDE = (70, 220, 130)
+
+# Configurações do jogador
+JOGADOR_LARGURA = 42
+JOGADOR_ALTURA = 52
+JOGADOR_VELOCIDADE = 5
+
+# Configurações dos obstáculos
+METEORO_MIN_TAMANHO = 25
+METEORO_MAX_TAMANHO = 55
+METEORO_VELOCIDADE_MIN = 2
+METEORO_VELOCIDADE_MAX = 5
+
+# Pontuação
+PONTOS_MOEDA = 10
