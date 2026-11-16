@@ -3,24 +3,27 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Fuga dos Obstáculos</title>
 <style>
 * { box-sizing: border-box; }
 body {
   margin: 0;
+  padding: 15px;
   background: #101827;
   color: white;
   font-family: Arial, sans-serif;
   text-align: center;
 }
-h1 { color: #45e6ff; margin: 20px 0 8px; }
+h1 { color: #45e6ff; }
 p { color: #cbd5e1; }
 canvas {
+  display: block;
+  margin: auto;
   background: #17243a;
   border: 3px solid #45e6ff;
   border-radius: 12px;
-  width: min(94vw, 500px);
+  width: min(94vw, 480px);
   height: auto;
   touch-action: none;
 }
@@ -34,98 +37,176 @@ button {
   font-size: 17px;
   font-weight: bold;
   cursor: pointer;
+  touch-action: none;
 }
-.controls { margin: 10px; }
 </style>
 </head>
 <body>
+
 <h1>🚀 Fuga dos Obstáculos</h1>
 <p>Desvie dos blocos vermelhos e pegue as moedas!</p>
-<p>Pontuação: <strong id="score">0</strong> | Recorde: <strong id="best">0</strong></p>
+
+<p>
+Pontuação: <strong id="score">0</strong> |
+Recorde: <strong id="best">0</strong>
+</p>
+
 <canvas id="game" width="480" height="600"></canvas>
+
 <div>
   <button onclick="startGame()">▶ Jogar / Reiniciar</button>
 </div>
-<div class="controls">
+
+<div>
   <button id="left">⬅ Esquerda</button>
   <button id="right">Direita ➡</button>
 </div>
+
 <p>Use as setas do teclado ou os botões na tela.</p>
 
 <script>
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
+
 const scoreText = document.getElementById("score");
 const bestText = document.getElementById("best");
 
-let player, obstacles, coins, score, running, gameOver;
-let left = false, right = false, frame = 0;
+let player;
+let obstacles = [];
+let coins = [];
+let score = 0;
+let frame = 0;
+let running = false;
+let gameOver = false;
+let left = false;
+let right = false;
+let animationId = null;
+
 let best = Number(localStorage.getItem("fugaRecorde") || 0);
 bestText.textContent = best;
 
+// Iniciar ou reiniciar o jogo
 function startGame() {
-  player = { x: 220, y: 520, w: 40, h: 40, speed: 6 };
+  if (animationId !== null) {
+    cancelAnimationFrame(animationId);
+    animationId = null;
+  }
+
+  player = {
+    x: 220,
+    y: 520,
+    w: 40,
+    h: 40,
+    speed: 6
+  };
+
   obstacles = [];
   coins = [];
   score = 0;
   frame = 0;
+  left = false;
+  right = false;
   running = true;
   gameOver = false;
+
   scoreText.textContent = score;
-  requestAnimationFrame(loop);
+  animationId = requestAnimationFrame(loop);
 }
 
+// Controles para celular
 function buttonControl(id, direction) {
   const btn = document.getElementById(id);
-  btn.addEventListener("pointerdown", e => {
-    e.preventDefault();
+
+  btn.addEventListener("pointerdown", event => {
+    event.preventDefault();
+    btn.setPointerCapture(event.pointerId);
+
     if (direction === "left") left = true;
     else right = true;
   });
-  ["pointerup", "pointerleave", "pointercancel"].forEach(event => {
-    btn.addEventListener(event, () => {
-      if (direction === "left") left = false;
-      else right = false;
-    });
-  });
+
+  function release() {
+    if (direction === "left") left = false;
+    else right = false;
+  }
+
+  btn.addEventListener("pointerup", release);
+  btn.addEventListener("pointercancel", release);
+  btn.addEventListener("lostpointercapture", release);
 }
+
 buttonControl("left", "left");
 buttonControl("right", "right");
 
-document.addEventListener("keydown", e => {
-  if (e.key === "ArrowLeft" || e.key === "a") left = true;
-  if (e.key === "ArrowRight" || e.key === "d") right = true;
-});
-document.addEventListener("keyup", e => {
-  if (e.key === "ArrowLeft" || e.key === "a") left = false;
-  if (e.key === "ArrowRight" || e.key === "d") right = false;
+// Controles para computador
+document.addEventListener("keydown", event => {
+  if (["ArrowLeft", "ArrowRight"].includes(event.key)) {
+    event.preventDefault();
+  }
+
+  if (event.key === "ArrowLeft" || event.key.toLowerCase() === "a") {
+    left = true;
+  }
+
+  if (event.key === "ArrowRight" || event.key.toLowerCase() === "d") {
+    right = true;
+  }
 });
 
+document.addEventListener("keyup", event => {
+  if (event.key === "ArrowLeft" || event.key.toLowerCase() === "a") {
+    left = false;
+  }
+
+  if (event.key === "ArrowRight" || event.key.toLowerCase() === "d") {
+    right = false;
+  }
+});
+
+window.addEventListener("blur", () => {
+  left = false;
+  right = false;
+});
+
+// Verificar colisões
 function hit(a, b) {
-  return a.x < b.x + b.w && a.x + a.w > b.x &&
-         a.y < b.y + b.h && a.y + a.h > b.y;
+  return (
+    a.x < b.x + b.w &&
+    a.x + a.w > b.x &&
+    a.y < b.y + b.h &&
+    a.y + a.h > b.y
+  );
 }
 
+// Atualizar e desenhar o jogo
 function loop() {
   if (!running) return;
+
+  animationId = null;
   frame++;
+
   ctx.clearRect(0, 0, 480, 600);
 
   // Fundo
   ctx.fillStyle = "#17243a";
   ctx.fillRect(0, 0, 480, 600);
+
   ctx.fillStyle = "#263852";
+
   for (let y = (frame * 4) % 60; y < 600; y += 60) {
     ctx.fillRect(0, y, 480, 2);
   }
 
-  // Jogador
+  // Movimentação do jogador
   if (left) player.x -= player.speed;
   if (right) player.x += player.speed;
+
   player.x = Math.max(0, Math.min(440, player.x));
 
+  // Desenhar jogador
   ctx.fillStyle = "#45e6ff";
   ctx.fillRect(player.x, player.y, player.w, player.h);
+
   ctx.font = "27px Arial";
   ctx.fillText("🚀", player.x + 5, player.y + 31);
 
@@ -133,66 +214,107 @@ function loop() {
   if (frame % 55 === 0) {
     obstacles.push({
       x: Math.random() * 420,
-      y: -40, w: 42, h: 42,
+      y: -40,
+      w: 42,
+      h: 42,
       speed: 3 + Math.min(score / 100, 5)
     });
   }
 
   // Criar moedas
   if (frame % 100 === 0) {
-    coins.push({ x: 15 + Math.random() * 430, y: -30, w: 25, h: 25 });
+    coins.push({
+      x: 15 + Math.random() * 430,
+      y: -30,
+      w: 25,
+      h: 25
+    });
   }
 
-  obstacles.forEach(o => {
-    o.y += o.speed;
-    ctx.fillStyle = "#ff4757";
-    ctx.fillRect(o.x, o.y, o.w, o.h);
-    if (hit(player, o)) endGame();
-  });
+  // Atualizar obstáculos
+  for (const obstacle of obstacles) {
+    obstacle.y += obstacle.speed;
 
-  coins.forEach(c => {
-    c.y += 3;
+    ctx.fillStyle = "#ff4757";
+    ctx.fillRect(
+      obstacle.x,
+      obstacle.y,
+      obstacle.w,
+      obstacle.h
+    );
+
+    if (hit(player, obstacle)) {
+      endGame();
+      return;
+    }
+  }
+
+  // Atualizar moedas
+  for (const coin of coins) {
+    coin.y += 3;
+
     ctx.font = "25px Arial";
-    ctx.fillText("🪙", c.x, c.y + 22);
-    if (!c.taken && hit(player, c)) {
-      c.taken = true;
+    ctx.fillText("🪙", coin.x, coin.y + 22);
+
+    if (!coin.taken && hit(player, coin)) {
+      coin.taken = true;
       score += 10;
     }
-  });
+  }
 
   obstacles = obstacles.filter(o => o.y < 620);
   coins = coins.filter(c => c.y < 620 && !c.taken);
 
-  if (frame % 10 === 0) score++;
+  // Pontuação por sobrevivência
+  if (frame % 10 === 0) {
+    score++;
+  }
+
   scoreText.textContent = score;
 
+  // Atualizar recorde
   if (score > best) {
     best = score;
     bestText.textContent = best;
     localStorage.setItem("fugaRecorde", best);
   }
 
-  if (running) requestAnimationFrame(loop);
+  if (running) {
+    animationId = requestAnimationFrame(loop);
+  }
 }
 
+// Finalizar partida
 function endGame() {
   if (gameOver) return;
+
   running = false;
   gameOver = true;
-  ctx.fillStyle = "rgba(0,0,0,0.78)";
+
+  left = false;
+  right = false;
+
+  ctx.fillStyle = "rgba(0,0,0,0.82)";
   ctx.fillRect(0, 0, 480, 600);
+
   ctx.fillStyle = "white";
   ctx.textAlign = "center";
+
   ctx.font = "bold 38px Arial";
   ctx.fillText("FIM DE JOGO!", 240, 270);
+
   ctx.font = "24px Arial";
   ctx.fillText("Pontuação: " + score, 240, 320);
+
   ctx.font = "17px Arial";
   ctx.fillText("Clique em Jogar para tentar novamente", 240, 365);
+
   ctx.textAlign = "left";
 }
 
+// Começar automaticamente
 startGame();
 </script>
+
 </body>
 </html>
